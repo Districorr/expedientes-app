@@ -1,126 +1,70 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import {
-  addDoc,
-  collection,
-  doc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import React, { useState } from 'react';
+import { Expediente } from '../types/expediente';
 
-interface Expediente {
-  id?: string;
-  numero: string;
-  estado: string;
-  usuario: string;
-  fechaIngreso: string;
-  observaciones?: string;
-}
+type Props = {
+  initialData?: Partial<Expediente>;
+};
 
-interface Props {
-  initialData?: Expediente;
-}
+const NewExpedienteForm: React.FC<Props> = ({ initialData = {} }) => {
+  const [numero, setNumero] = useState(initialData.numero || '');
+  const [estado, setEstado] = useState(initialData.estado || '');
+  const [usuario, setUsuario] = useState(initialData.usuario || '');
+  const [fechaIngreso, setFechaIngreso] = useState(initialData.fechaIngreso || '');
 
-export default function NewExpedienteForm({ initialData }: Props) {
-  const [formData, setFormData] = useState<Omit<Expediente, "id">>({
-    numero: initialData?.numero || "",
-    estado: initialData?.estado || "Mesa de Entrada",
-    usuario: initialData?.usuario || "",
-    fechaIngreso: initialData?.fechaIngreso || "",
-    observaciones: initialData?.observaciones || "",
-  });
-
-  const router = useRouter();
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      if (initialData?.id) {
-        await updateDoc(doc(db, "expedientes", initialData.id), {
-          ...formData,
-          actualizadoEn: serverTimestamp(),
-        });
-      } else {
-        await addDoc(collection(db, "expedientes"), {
-          ...formData,
-          creadoEn: serverTimestamp(),
-        });
-      }
-      router.push("/");
-    } catch (error) {
-      console.error("Error guardando expediente:", error);
-    }
+    const expediente: Expediente = {
+      id: initialData.id || '',
+      numero,
+      estado,
+      usuario,
+      fechaIngreso,
+    };
+    console.log('Enviando expediente:', expediente);
+    // Acá podrías enviar expediente al backend
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: "500px", margin: "0 auto" }}>
+    <form onSubmit={handleSubmit}>
       <div>
         <label>Número:</label>
         <input
           type="text"
-          name="numero"
-          value={formData.numero}
-          onChange={handleChange}
+          value={numero}
+          onChange={(e) => setNumero(e.target.value)}
           required
         />
       </div>
-
       <div>
         <label>Estado:</label>
-        <select
-          name="estado"
-          value={formData.estado}
-          onChange={handleChange}
-        >
-          <option value="Mesa de Entrada">Mesa de Entrada</option>
-          <option value="En Proceso">En Proceso</option>
-          <option value="Finalizado">Finalizado</option>
-        </select>
+        <input
+          type="text"
+          value={estado}
+          onChange={(e) => setEstado(e.target.value)}
+          required
+        />
       </div>
-
       <div>
         <label>Usuario:</label>
         <input
           type="text"
-          name="usuario"
-          value={formData.usuario}
-          onChange={handleChange}
+          value={usuario}
+          onChange={(e) => setUsuario(e.target.value)}
           required
         />
       </div>
-
       <div>
         <label>Fecha de Ingreso:</label>
         <input
           type="date"
-          name="fechaIngreso"
-          value={formData.fechaIngreso}
-          onChange={handleChange}
+          value={fechaIngreso}
+          onChange={(e) => setFechaIngreso(e.target.value)}
           required
         />
       </div>
-
-      <div>
-        <label>Observaciones:</label>
-        <textarea
-          name="observaciones"
-          value={formData.observaciones}
-          onChange={handleChange}
-        />
-      </div>
-
-      <button type="submit">
-        {initialData?.id ? "Actualizar" : "Crear"} Expediente
-      </button>
+      <button type="submit">Guardar</button>
     </form>
   );
-}
+};
 
+export default NewExpedienteForm;
