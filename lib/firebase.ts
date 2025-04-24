@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { DocumentData } from '@/lib/firebase';
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -22,7 +21,7 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
-// Exporta solo los tipos que necesitas explícitamente
-export type { DocumentData, QuerySnapshot, DocumentSnapshot } from 'firebase/firestore';
+// Elimina TODAS las exportaciones de tipos con *
+// En su lugar, exporta solo lo necesario explícitamente
+export type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 export type { User } from 'firebase/auth';
-export * from 'firebase/storage';
