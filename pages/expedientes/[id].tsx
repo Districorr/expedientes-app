@@ -14,7 +14,7 @@ const ExpedientePage = () => {
   useEffect(() => {
     if (typeof id === 'string') {
       getExpedienteById(id).then((data) => {
-        if (data && data.numero && data.estado && data.usuario && data.fechaIngreso) {
+        if (data) {
           setExpediente(data as Expediente);
         }
         setLoading(false);
@@ -26,9 +26,12 @@ const ExpedientePage = () => {
     return <div>Cargando...</div>;
   }
 
-  return (
-    <NewExpedienteForm initialData={{ ...expediente, id: id as string }} />
-  );
+  const initialData = {
+    ...expediente,
+    id: id as string,
+  };
+
+  return <NewExpedienteForm initialData={initialData} />;
 };
 
 export default ExpedientePage;
