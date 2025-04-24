@@ -1,38 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { addDoc, collection, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@lib/firebase';
+import { Button } from '@components/ui/Button';
+import { Input } from '@components/ui/Input';
+import { Textarea } from '@components/ui/Textarea';
+import { Expediente } from '@types/expediente';
 
-interface ExpedienteFormProps {
-  initialData?: {
-    id?: string;
-    numero: string;
-    estado: string;
-    usuario: string;
-    fechaIngreso: string;
-    observaciones?: string;
-  };
+interface NewExpedienteFormProps {
+  initialData?: Expediente;
 }
 
-export const NewExpedienteForm: React.FC<ExpedienteFormProps> = ({ initialData }) => {
+export const NewExpedienteForm = ({ initialData }: NewExpedienteFormProps) => {
   const router = useRouter();
-  const [numero, setNumero] = useState(initialData?.numero || '');
-  const [usuario, setUsuario] = useState(initialData?.usuario || '');
-  const [fechaIngreso, setFechaIngreso] = useState(initialData?.fechaIngreso || '');
-  const [observaciones, setObservaciones] = useState(initialData?.observaciones || '');
+  const [formData, setFormData] = useState<Omit<Expediente, 'id'>>({
+    numero: initialData?.numero || '',
+    estado: initialData?.estado || 'Mesa de Entrada',
+    usuario: initialData?.usuario || '',
+    fechaIngreso: initialData?.fechaIngreso || '',
+    observaciones: initialData?.observaciones || '',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
+    if (!formData.numero || !formData.usuario || !formData.fechaIngreso) {
+      setError('Por favor complete todos los campos obligatorios');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const expedienteData = {
-        numero,
-        usuario,
-        fechaIngreso,
-        observaciones,
-        estado: initialData?.estado || 'Mesa de Entrada',
+        ...formData,
         actualizadoEn: serverTimestamp(),
       };
 
@@ -46,70 +55,76 @@ export const NewExpedienteForm: React.FC<ExpedienteFormProps> = ({ initialData }
       }
 
       router.push('/');
-    } catch (error) {
-      console.error('Error al guardar expediente:', error);
-      alert('Ocurrió un error al guardar el expediente');
+    } catch (err) {
+      console.error('Error al guardar expediente:', err);
+      setError('Ocurrió un error al guardar el expediente. Por favor intente nuevamente.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
         {initialData ? 'Editar Expediente' : 'Nuevo Expediente'}
       </h1>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 mb-2">Número de Expediente *</label>
-        <input
-          type="text"
-          value={numero}
-          onChange={(e) => setNumero(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md"
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Número de Expediente *"
+          name="numero"
+          value={formData.numero}
+          onChange={handleChange}
           required
         />
-      </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 mb-2">Usuario *</label>
-        <input
-          type="text"
-          value={usuario}
-          onChange={(e) => setUsuario(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md"
+        <Input
+          label="Usuario *"
+          name="usuario"
+          value={formData.usuario}
+          onChange={handleChange}
           required
         />
-      </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 mb-2">Fecha de Ingreso *</label>
-        <input
+        <Input
+          label="Fecha de Ingreso *"
           type="date"
-          value={fechaIngreso}
-          onChange={(e) => setFechaIngreso(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md"
+          name="fechaIngreso"
+          value={formData.fechaIngreso}
+          onChange={handleChange}
           required
         />
-      </div>
 
-      <div className="mb-6">
-        <label className="block text-gray-700 mb-2">Observaciones</label>
-        <textarea
-          value={observaciones}
-          onChange={(e) => setObservaciones(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md"
-          rows={3}
+        <Textarea
+          label="Observaciones"
+          name="observaciones"
+          value={formData.observaciones}
+          onChange={handleChange}
         />
-      </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
-      >
-        {isSubmitting ? 'Guardando...' : initialData ? 'Actualizar Expediente' : 'Crear Expediente'}
-      </button>
-    </form>
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/')}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={isSubmitting}
+          >
+            {initialData ? 'Guardar Cambios' : 'Crear Expediente'}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
