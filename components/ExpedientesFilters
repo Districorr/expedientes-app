@@ -1,0 +1,98 @@
+import { useState } from "react";
+import { collection, getDocs, query, where, limit, startAfter, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectItem } from "@/components/ui/select";
+import { generarPDF } from "@/components/pdfGenerator";
+
+export default function ExpedientesFilters({ onResult }) {
+  const [estado, setEstado] = useState("");
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
+  const [observacion, setObservacion] = useState("");
+  const [lastVisible, setLastVisible] = useState(null);
+  const [expedientes, setExpedientes] = useState([]);
+  const [cargando, setCargando] = useState(false);
+
+  const pageSize = 10;
+
+  const construirConsulta = async (esPaginado = false) => {
+    let base = collection(db, "expedientes");
+    let filtros = [];
+
+    if (estado) filtros.push(where("estado", "==", estado));
+    if (desde) filtros.push(where("fechaIngreso", ">=", desde));
+    if (hasta) filtros.push(where("fechaIngreso", "<=", hasta));
+
+    let q = filtros.length ? query(base, ...filtros, orderBy("fechaIngreso", "desc")) : query(base, orderBy("fechaIngreso", "desc"));
+    if (esPaginado && lastVisible) q = query(q, startAfter(lastVisible));
+
+    return q;
+  };
+
+  const buscar = async () => {
+    setCargando(true);
+    const q = await construirConsulta();
+    const snapshot = await getDocs(query(q, limit(pageSize)));
+
+    let resultados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    if (observacion) {
+      resultados = resultados.filter(e =>
+        e.observaciones?.toLowerCase().includes(observacion.toLowerCase())
+      );
+    }
+
+    setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+    setExpedientes(resultados);
+    onResult(resultados);
+    setCargando(false);
+  };
+
+  const cargarMas = async () => {
+    setCargando(true);
+    const q = await construirConsulta(true);
+    const snapshot = await getDocs(query(q, limit(pageSize)));
+
+    let nuevos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    if (observacion) {
+      nuevos = nuevos.filter(e =>
+        e.observaciones?.toLowerCase().includes(observacion.toLowerCase())
+      );
+    }
+
+    const todos = [...expedientes, ...nuevos];
+    setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+    setExpedientes(todos);
+    onResult(todos);
+    setCargando(false);
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-xl shadow mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Select value={estado} onValueChange={setEstado} placeholder="Estado">
+          <SelectItem value="Mesa de Entrada">Mesa de Entrada</SelectItem>
+          <SelectItem value="Contable">Contable</SelectItem>
+          <SelectItem value="Despacho">Despacho</SelectItem>
+          <SelectItem value="Suministro">Suministro</SelectItem>
+          <SelectItem value="Tesorería">Tesorería</SelectItem>
+          <SelectItem value="Rendición de Cuentas">Rendición de Cuentas</SelectItem>
+          <SelectItem value="Archivo">Archivo</SelectItem>
+        </Select>
+
+        <Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} placeholder="Desde" />
+        <Input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} placeholder="Hasta" />
+        <Input value={observacion} onChange={(e) => setObservacion(e.target.value)} placeholder="Buscar en observaciones" />
+      </div>
+
+      <div className="mt-4 flex gap-4">
+        <Button onClick={buscar} disabled={cargando}>Buscar</Button>
+        <Button onClick={cargarMas} disabled={cargando || !lastVisible}>Cargar más</Button>
+        <Button onClick={() => generarPDF(expedientes)} disabled={!expedientes.length}>Exportar PDF</Button>
+      </div>
+    </div>
+  );
+}
