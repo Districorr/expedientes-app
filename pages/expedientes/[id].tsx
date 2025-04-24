@@ -3,7 +3,7 @@
 import { GetServerSideProps, NextPage } from 'next';
 import { useRouter } from 'next/router';
 import NewExpedienteForm from '../../components/NewExpedienteForm';
-import { Expediente } from '../../types'; // Asegúrate de tener definida esta interfaz en tu proyecto
+import { Expediente } from '../../types'; // Asegúrate de tener definida esta interfaz
 
 interface ExpedientePageProps {
   expediente: Expediente | null;
@@ -13,12 +13,13 @@ const ExpedientePage: NextPage<ExpedientePageProps> = ({ expediente }) => {
   const router = useRouter();
   const { id } = router.query;
 
-  // Si no se obtuvo el expediente o el id no es de tipo string, mostramos un mensaje de carga.
+  // Si aún no se cargaron los datos o el id no es una cadena, mostramos un mensaje de "Cargando..."
   if (!expediente || typeof id !== 'string') {
     return <div>Cargando...</div>;
   }
 
-  // Aseguramos que el objeto cumple con todos los campos requeridos de la interfaz Expediente.
+  // Creamos un objeto initialData que Cumpla completamente con la interfaz Expediente.
+  // Si alguna propiedad resulta nula o indefinida, le asignamos un valor por defecto (en este ejemplo, cadena vacía).
   const initialData: Expediente = {
     id,
     numero: expediente.numero || '',
@@ -31,21 +32,21 @@ const ExpedientePage: NextPage<ExpedientePageProps> = ({ expediente }) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params!; // Obtenemos el id de la URL
+  const { id } = context.params!;
 
   // Simulación de obtención del expediente.
-  // Reemplaza este bloque con la llamada a tu API o consulta a la base de datos.
+  // Reemplaza este bloque por la lógica real para obtener el expediente (por ejemplo, una consulta a una API o base de datos).
   let expediente: Expediente | null = null;
   try {
     expediente = {
       id: id as string,
-      numero: "12345",
-      estado: "Pendiente",
-      usuario: "usuario@example.com",
-      fechaIngreso: "2025-04-23",
+      numero: '12345',
+      estado: 'Pendiente',
+      usuario: 'usuario@example.com',
+      fechaIngreso: '2025-04-23',
     };
   } catch (error) {
-    console.error("Error al obtener el expediente:", error);
+    console.error('Error al obtener el expediente:', error);
   }
 
   return { props: { expediente } };
