@@ -31,13 +31,13 @@ export default function ExpedientePage() {
           const data = docSnap.data();
           setExpediente({
             id: docSnap.id,
-            numero: data.numero,
-            estado: data.estado,
-            usuario: data.usuario,
-            fechaIngreso: data.fechaIngreso, // puede ser Date o string
+            numero: data.numero || '',
+            estado: data.estado || '',
+            usuario: data.usuario || '',
+            fechaIngreso: data.fechaIngreso || '',
           });
         } else {
-          console.error('Expediente no encontrado');
+          console.warn('Expediente no encontrado');
         }
       } catch (error) {
         console.error('Error al obtener expediente:', error);
@@ -49,13 +49,8 @@ export default function ExpedientePage() {
     fetchExpediente();
   }, [id]);
 
-  if (loading) {
-    return <div>Cargando...</div>;
-  }
-
-  if (!expediente) {
-    return <div>No se encontró el expediente</div>;
-  }
+  if (loading) return <div>Cargando...</div>;
+  if (!expediente) return <div>No se encontró el expediente</div>;
 
   return <NewExpedienteForm initialData={expediente} />;
 }
