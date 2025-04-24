@@ -1,45 +1,19 @@
-import { useState } from 'react';
-import Head from 'next/head';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@lib/firebase';
-import { ExpedienteCard } from '@components/ExpedienteCard';
+import { useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { DocumentData } from "firebase/firestore";
 
 export default function Home() {
-  const [numero, setNumero] = useState('');
-  const [expediente, setExpediente] = useState<null | {
-    numero: string;
-    estado: string;
-    observaciones?: string;
-    fechaIngreso?: string;
-  }>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [numero, setNumero] = useState("");
+  const [expediente, setExpediente] = useState<DocumentData | null>(null);
 
   const buscarExpediente = async () => {
-    if (!numero.trim()) {
-      setError('Por favor ingrese un número de expediente');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setExpediente(null);
-
-    try {
-      const q = query(collection(db, 'expedientes'), where('numero', '==', numero));
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        setError('No se encontró el expediente');
-      } else {
-        setExpediente(snapshot.docs[0].data() as any);
-      }
-    } catch (err) {
-      console.error('Error al buscar expediente:', err);
-      setError('Ocurrió un error al buscar el expediente');
-    } finally {
-      setLoading(false);
-    }
+    const q = query(
+      collection(db, "expedientes"),
+      where("numero", "==", numero)
+    );
+    const snapshot = await getDocs(q);
+    setExpediente(snapshot.docs[0]?.data() || null);
   };
 
   return (
