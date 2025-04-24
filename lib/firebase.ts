@@ -13,15 +13,10 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
-// Elimina TODAS las exportaciones de tipos con *
-// En su lugar, exporta solo lo necesario explícitamente
-export type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
-export type { User } from 'firebase/auth';
+// Eliminadas todas las exportaciones de tipos conflictivas
