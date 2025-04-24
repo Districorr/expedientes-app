@@ -13,14 +13,29 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "incremental": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "@lib/*": ["lib/*"],
-      "@components/*": ["components/*"]
+      "@components/*": ["components/*"],
+      "@types/*": ["types/*"]
     },
-    "types": ["firebase", "node"]
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "types": ["firebase", "node", "next", "react", "react-dom"],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
