@@ -3,6 +3,15 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { DocumentData } from "firebase/firestore";
 
+
+export interface Expediente {
+  id: string;
+  numero: string;
+  estado: string;
+  usuario: string;
+  fechaIngreso: string;
+}
+
 export default function Home() {
   const [numero, setNumero] = useState("");
   const [expediente, setExpediente] = useState<DocumentData | null>(null);
