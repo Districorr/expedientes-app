@@ -5,7 +5,7 @@ import { db } from '@lib/firebase';
 import { Button } from '@components/ui/Button';
 import { Input } from '@components/ui/Input';
 import { Textarea } from '@components/ui/Textarea';
-import { Expediente } from '@types/expediente';
+import { Expediente } from '@/types/expediente';
 
 interface NewExpedienteFormProps {
   initialData?: Expediente;
