@@ -1,29 +1,61 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import NewExpedienteForm from "@/components/NewExpedienteForm";
-import type { DocumentData } from "firebase/firestore";
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import NewExpedienteForm from '@/components/NewExpedienteForm';
 
-export default function EditarExpediente() {
+type Expediente = {
+  id: string;
+  numero: string;
+  estado: string;
+  usuario: string;
+  fechaIngreso: string;
+};
+
+export default function ExpedientePage() {
   const router = useRouter();
   const { id } = router.query;
-  const [expediente, setExpediente] = useState<DocumentData | null>(null);
+
+  const [expediente, setExpediente] = useState<Expediente | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      const fetchExpediente = async () => {
-        const docRef = doc(db, "expedientes", id as string);
+    if (!id) return;
+
+    const fetchExpediente = async () => {
+      try {
+        const docRef = doc(db, 'expedientes', id as string);
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
-          setExpediente(docSnap.data());
+          const data = docSnap.data();
+          setExpediente({
+            id: docSnap.id,
+            numero: data.numero,
+            estado: data.estado,
+            usuario: data.usuario,
+            fechaIngreso: data.fechaIngreso, // puede ser Date o string
+          });
+        } else {
+          console.error('Expediente no encontrado');
         }
-      };
-      fetchExpediente();
-    }
+      } catch (error) {
+        console.error('Error al obtener expediente:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExpediente();
   }, [id]);
 
-  if (!expediente) return <div>Cargando...</div>;
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
 
-  return <NewExpedienteForm initialData={{ id: id as string, ...expediente }} />;
+  if (!expediente) {
+    return <div>No se encontró el expediente</div>;
+  }
+
+  return <NewExpedienteForm initialData={expediente} />;
 }
